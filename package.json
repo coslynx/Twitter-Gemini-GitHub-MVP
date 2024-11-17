@@ -1,0 +1,30 @@
+{
+  "name": "twitter-to-github-mvp",
+  "version": "1.0.0",
+  "description": "Automates Twitter data collection and GitHub Markdown storage using Gemini AI",
+  "main": "src/api/app.js",
+  "author": "Your Name Here",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YourGitHubUsername/twitter-to-github-mvp.git"
+  },
+  "dependencies": {
+    "express": "4.21.1",
+    "node-cron": "3.0.3",
+    "mongodb": "6.10.0",
+    "@octokit/rest": "21.0.2",
+    "twitter-api-v2": "1.18.2",
+    "@google-cloud/gemini": "1.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.6.2",
+    "supertest": "^6.3.3"
+  },
+  "scripts": {
+    "start": "node src/api/app.js",
+    "test": "jest",
+    "dev": "nodemon src/api/app.js"
+  }
+}
+```
