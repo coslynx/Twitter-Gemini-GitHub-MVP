@@ -1,0 +1,13 @@
+# Dependencies
+/node_modules
+package-lock.json
+
+# Environment variables
+.env
+
+# Logs
+helpers.log
+error.log
+
+# VSCode
+.vscode/

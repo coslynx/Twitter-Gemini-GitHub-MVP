@@ -1,8 +1,0 @@
-{
-  "commands": [
-    "npm install",
-    "mongod",
-    "node src/cron/cronJob.js"
-  ]
-}
-```
