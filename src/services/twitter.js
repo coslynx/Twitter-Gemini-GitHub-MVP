@@ -15,7 +15,6 @@ class TwitterService {
       "ai automation guide 🧵",
       "machine learning tools thread",
       "ai productivity tools 🧵",
-      "filter:links new ai tools",
       "ai developments thread",
       "generative ai guide 1/",
       "ai models comparison (1/",
@@ -31,7 +30,6 @@ class TwitterService {
       "programming tips 🧵",
       "backend development thread",
       "frontend frameworks 🧵",
-      "filter:links coding resources",
       "system design tips thread",
       "database optimization 1/",
       "clean code guide 🧵",
@@ -47,7 +45,6 @@ class TwitterService {
       "work optimization 🧵",
       "side business guide thread",
       "freelancing success 🧵",
-      "filter:links productivity stack",
       "remote work tools thread",
       "business automation 1/",
       "digital nomad guide 🧵",
@@ -79,21 +76,19 @@ class TwitterService {
 
     this.lastUsedType = this.currentTypeIndex + 1;
 
-    const filter = Math.random() < 0.5 ? "&f=top" : "&f=live";
-
-    return selectedQuery + filter;
+    return selectedQuery;
   }
 
   async init() {
     try {
       if (!this.browser) {
         this.browser = await puppeteer.launch({
-          headless: true, // false
+          headless: true, // false to see the browser live
           // Use these args when running on a server
           args: [
             "--no-sandbox",
             "--disable-setuid-sandbox",
-            "--window-size=1280,720",
+            "--window-size=1920,1080",
             "--disable-notifications",
             "--disable-gpu",
             "--disable-dev-shm-usage",
@@ -131,18 +126,6 @@ class TwitterService {
           //  "--disable-gpu",
           //  "--disable-dev-shm-usage",
           //],
-
-          // Use these viewport when running on a server
-          defaultViewport: {
-            width: 1280,
-            height: 720,
-          },
-
-          // Use these viewport when running locally
-          //defaultViewport: {
-          //  width: 1920,
-          //  height: 1080,
-          //},
 
           protocolTimeout: 180000,
           timeout: 180000,
@@ -634,6 +617,84 @@ class TwitterService {
       }
     } catch (error) {
       logger.error("Cleanup failed:", error);
+    }
+  }
+
+  async postTweet(text) {
+    try {
+      if (!this.page) {
+        logger.info("No active page, initializing Twitter service...");
+        await this.init();
+        await this.login();
+      }
+
+      logger.info("Posting new tweet...");
+      try {
+        await this.page.goto("https://twitter.com/compose/tweet", {
+          waitUntil: "domcontentloaded",
+          timeout: 60000,
+        });
+      } catch (navigationError) {
+        await this.page.goto("https://twitter.com/home", {
+          waitUntil: "domcontentloaded",
+          timeout: 60000,
+        });
+      }
+      await sleep(3000);
+
+      await this.page.waitForSelector('div[data-testid="tweetTextarea_0"]', {
+        timeout: 10000,
+      });
+      await this.page.click('div[data-testid="tweetTextarea_0"]');
+      await sleep(1000);
+
+      await this.page.keyboard.type(text, { delay: 100 });
+      await sleep(1000);
+
+      try {
+        await this.page.keyboard.down("Control");
+        await this.page.keyboard.press("Enter");
+        await this.page.keyboard.up("Control");
+        await sleep(2000);
+
+        const buttonVisible = await this.page.evaluate(() => {
+          return !!document.querySelector('div[data-testid="tweetButton"]');
+        });
+
+        if (buttonVisible) {
+          for (let i = 0; i < 3; i++) {
+            await this.page.keyboard.press("Tab");
+            await sleep(500);
+          }
+          await this.page.keyboard.press("Enter");
+        }
+
+        await sleep(3000);
+
+        const tweetPosted = await this.page.evaluate(() => {
+          const composeAreaGone = !document.querySelector(
+            'div[data-testid="tweetTextarea_0"]'
+          );
+          const successToast = document.querySelector('[data-testid="toast"]');
+          const noErrors = !document.querySelector('[data-testid*="error"]');
+
+          return (composeAreaGone || successToast) && noErrors;
+        });
+
+        if (!tweetPosted) {
+          await this.page.screenshot({ path: "tweet-failed.png" });
+          throw new Error("Tweet posting verification failed");
+        }
+
+        logger.info("Tweet posted successfully!");
+        return true;
+      } catch (error) {
+        logger.error("Failed to post tweet:", error.message);
+        return false;
+      }
+    } catch (error) {
+      logger.error("Failed to post tweet:", error.message);
+      return false;
     }
   }
 }
